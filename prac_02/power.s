@@ -14,7 +14,7 @@ _start:
  call power_function
  sub $8, %rsp			# reset stack pointer. 
 
- push $rax			# save first result 
+ push %rax			# save first result 
  
  push $2
  push $5
@@ -22,9 +22,16 @@ _start:
  sub $8, %rsp 			# --------- TODO err correct len
 
  pop %rbx			# retreive first result
- add %rax, %rbx		# add results
+ add %rax, %rbx			# add results
 
- mov $1, %rax
+
+# TEMP TEST AREA -- START 
+
+# ------- infinite looping. Echo $? = 130. Review. 32 to 64 bit.
+
+# TEMP TEST AREA -- END
+
+ movq $1, %rax
  int $0x80 			# end
 
 # SECTION:	Power function
@@ -40,31 +47,31 @@ _start:
 
 power_function:
  push %rbp 			# store original stack pointer.
- mov %rsp, %rbp 		# %rbp now = %rsp position.
- sub $8, $rsp			# add temp space to stack.
+ movq %rsp, %rbp 		# %rbp now = %rsp position.
+ sub $8, %rsp			# add temp space to stack.
  
- mov -24(%rbp), %rcx
- mov -16(%rbp), %rbx
- mov -16(%rbp), %rax
+ movq -24(%rbp), %rcx
+ movq -16(%rbp), %rbx
+ movq -16(%rbp), %rax
 
- mov $0, -8(%rbp)		# ensure temp storage = 0.
+ movq $0, -8(%rbp)		# ensure temp storage = 0.
  
 loop_top: 
  cmp $1, %rcx			# exit if exponent =< 1.
- jge loop_exit
+ je loop_exit
 
- mov -4(%rbp), %rax		# multiply current res by base.
- imul %rbx, %rax		# store in %rax.
+ movq -8(%rbp), %rax		# multiply current res by base.
+ imulq %rbx, %rax		# store in %rax.
 
- mov %rax, -4(%rbp)  		# necessity questionable tbh.
+ movq %rax, -8(%rbp)  		# necessity questionable tbh.
 
  dec %rcx 			# decr exponent.
 
  jmp loop_top
 
 loop_exit: 
- mov -4(%rbp), %rax 		# lots of pointless mov.
- mov %rbp, %rsp 		# move %rsp back to "init" pos.
+ movq -8(%rbp), %rax 		# lots of pointless mov.
+ movq %rbp, %rsp 		# move %rsp back to "init" pos.
  pop %rbp			# reassign %rbp original value.
 
  ret 				# pop return addr for %eip.
